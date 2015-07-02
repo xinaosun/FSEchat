@@ -1,0 +1,175 @@
+<!doctype html> 
+<html> 
+    <head> 
+        <title>hichat</title> 
+        
+        <style type="text/css">
+        html, body {  
+        margin: 0;  
+        background-color: #efefef;  
+        font-family: sans-serif;  
+    }  
+        .wrapper {  
+        width: 500px;  
+        height: 640px;  
+        padding: 5px;  
+        margin: 0 auto;  
+        background-color: #ddd;  
+    }  
+    #loginWrapper {  
+        position: fixed;  
+        top: 0;  
+        right: 0;  
+        bottom: 0;  
+        left: 0;  
+        background-color: rgba(5, 5, 5, .6);  
+        text-align: center;  
+        color: #fff;  
+        display: block;  
+        padding-top: 200px;  
+    }  
+    #nickWrapper {  
+        display: block;  
+    }  
+    .banner {  
+        height: 80px;  
+        width: 100%;  
+    }  
+    .banner p {  
+        float: left;  
+        display: inline-block;  
+    }  
+    .controls {  
+        height: 100px;  
+        margin: 5px 0px;  
+        position: relative;  
+    }  
+    #historyMsg {  
+        height: 400px;  
+        background-color: #fff;  
+        overflow: auto;  
+        padding: 2px;  
+    }  
+    #historyMsg img {  
+        max-width: 99%;  
+    }  
+    .timespan {  
+        color: #ddd;  
+    }    
+    #messageInput {  
+        width: 440px;  
+        max-width: 440px;  
+        height: 90px;  
+        max-height: 90px;  
+    }  
+    #sendBtn {  
+        width: 50px;  
+        height: 96px;  
+        float: right;  
+    }  
+        </style>    
+    </head> 
+    <body> 
+        <div class="wrapper"> 
+            <div class="banner"> 
+                <h1 align="center">FSE Chatroom</h1> 
+                <span id="status"></span> 
+            </div> 
+            <div id="historyMsg"> 
+            </div> 
+            <div class="controls" > 
+                <textarea id="messageInput" placeHolder="enter to send"></textarea> 
+                <input id="sendBtn" type="button" value="SEND"> 
+            </div> 
+        </div> 
+        <div id="loginWrapper"> 
+            <p id="info">Please Type in Your Name.</p> 
+            <div id="nickWrapper"> 
+                <input type="text" placeHolder="Your Name" id="nicknameInput" /> 
+                <input type="button" value="Enter the Room" id="loginBtn" /> 
+            </div> 
+        </div> 
+        
+        <script src = "/socket.io/socket.io.js"></script>
+        <script type="text/javascript">
+            //页面加载时；调用匿名函数
+        window.onload = function() {
+            var FSEchat = new HiChat();
+            FSEchat.initiate();
+            };
+
+            var HiChat = function() {this.socket = null;};
+            //类定义
+            HiChat.prototype = {
+                initiate: function() {
+                    var that = this;
+                    //socket io 连接
+                    this.socket = io.connect();
+                    this.socket.on('connect', function() {
+                        document.getElementById('nicknameInput').focus();
+                    });
+                    
+                    //用户登录模块
+                    document.getElementById('loginBtn').addEventListener('click', function() {
+                        var nickName = document.getElementById('nicknameInput').value;
+                        if (nickName.trim().length != 0) {
+                            that.socket.emit('login', nickName);
+                        } else {
+                            document.getElementById('nicknameInput').focus();
+                        };
+                    }, false);
+                    
+                    //用户名存在模块
+                    this.socket.on('nickExisted', function() {
+                    document.getElementById('info').textContent = 'This Name Already Exists.'; 
+                    });
+                    
+                    //登陆成功模块
+                    this.socket.on('loginSuccess', function() {
+                        document.title = 'FSE Chat | ' + document.getElementById('nicknameInput').value;//在页面的tab现实用户名
+                        document.getElementById('loginWrapper').style.display = 'none';
+                        document.getElementById('messageInput').focus();
+                    });
+                    
+                    //系统信息模块
+                    this.socket.on('system', function(nickName, userCount, type) {
+                     var msg = nickName + (type == 'login' ? ' joined' : ' left');
+                     that._displayNewMsg('system',msg,'blue');
+                     document.getElementById('status').textContent = userCount + (userCount > 1 ? ' users' : ' user') + ' online';
+                 }); 
+                    
+                    //点击send－信息发出模块
+                    document.getElementById('sendBtn').addEventListener('click', function() {
+                    var messageInput = document.getElementById('messageInput'),
+                        msg = messageInput.value;
+                        
+                    messageInput.value = '';
+                    messageInput.focus();
+                    if (msg.trim().length != 0) {
+                        that.socket.emit('postMsg', msg); //把消息发送到服务器
+                        that._displayNewMsg('me', msg); //把自己的消息显示到自己的窗口中
+                        return;
+                    };
+                }, false);
+                    
+                    //显示信息模块
+                    this.socket.on('newMsg', function(user, msg) {
+                        that._displayNewMsg(user, msg);
+                });     
+            },
+                    //message display function
+                     _displayNewMsg: function(user, msg, color) {
+                    var container = document.getElementById('historyMsg'),
+                        msgToDisplay = document.createElement('p'),
+                        date = new Date().toTimeString().substr(0, 8);
+                    msgToDisplay.style.color = color || '#000';
+                    msgToDisplay.innerHTML = user + '<span class="timespan">(' + date + '): </span>' + msg;
+                    container.appendChild(msgToDisplay);
+                    container.scrollTop = container.scrollHeight;
+            }   
+                
+        };
+            
+        </script> 
+    </body> 
+</html> 
