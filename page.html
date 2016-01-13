@@ -1,7 +1,7 @@
 <!doctype html> 
 <html> 
     <head> 
-        <title>hichat</title> 
+        <title>FSE Chat</title> 
         
         <style type="text/css">
         html, body {  
@@ -85,85 +85,103 @@
         <div id="loginWrapper"> 
             <p id="info">Please Type in Your Name.</p> 
             <div id="nickWrapper"> 
-                <input type="text" placeHolder="Your Name" id="nicknameInput" /> 
+                <input type="text" placeHolder="Enter Your Name" id="nicknameInput" /> 
                 <input type="button" value="Enter the Room" id="loginBtn" /> 
             </div> 
         </div> 
         
         <script src = "/socket.io/socket.io.js"></script>
         <script type="text/javascript">
-            //页面加载时；调用匿名函数
+        // JavaScript codes
+        // when window is loaded, call this method
         window.onload = function() {
-            var FSEchat = new HiChat();
+            var FSEchat = new chat();
             FSEchat.initiate();
             };
 
-            var HiChat = function() {this.socket = null;};
-            //类定义
-            HiChat.prototype = {
-                initiate: function() {
-                    var that = this;
-                    //socket io 连接
-                    this.socket = io.connect();
-                    this.socket.on('connect', function() {
+        var chat = function() {this.socket = null;};
+            
+        // define prototype of chat
+        chat.prototype = {
+            
+            initiate: function() {
+                var that = this;
+                    
+                //socket io 连接
+                // server connecting via socket
+                this.socket = io.connect();
+
+                // once server is connected, ask user to enter name
+                this.socket.on('connect', function() {
+                    document.getElementById('nicknameInput').focus();
+                });
+                    
+                // user login event
+                document.getElementById('loginBtn').addEventListener('click', function() {
+                    // get nickname
+                    var nickName = document.getElementById('nicknameInput').value;
+                    
+                    // emit 'lonin' on socket
+                    if (nickName.trim().length != 0) {
+                        that.socket.emit('login', nickName);
+
+                    } else {
                         document.getElementById('nicknameInput').focus();
-                    });
-                    
-                    //用户登录模块
-                    document.getElementById('loginBtn').addEventListener('click', function() {
-                        var nickName = document.getElementById('nicknameInput').value;
-                        if (nickName.trim().length != 0) {
-                            that.socket.emit('login', nickName);
-                        } else {
-                            document.getElementById('nicknameInput').focus();
                         };
-                    }, false);
+                }, false);
                     
-                    //用户名存在模块
-                    this.socket.on('nickExisted', function() {
+                // nickname already exist event
+                this.socket.on('nickExisted', function() {
                     document.getElementById('info').textContent = 'This Name Already Exists.'; 
-                    });
+                });
                     
-                    //登陆成功模块
-                    this.socket.on('loginSuccess', function() {
-                        document.title = 'FSE Chat | ' + document.getElementById('nicknameInput').value;//在页面的tab现实用户名
-                        document.getElementById('loginWrapper').style.display = 'none';
-                        document.getElementById('messageInput').focus();
-                    });
+                // Login Success event
+                this.socket.on('loginSuccess', function() {
+                    // change the tab name when a user login
+                    document.title = 'FSE Chat | ' + document.getElementById('nicknameInput').value;//
+                    document.getElementById('loginWrapper').style.display = 'none';
+                    document.getElementById('messageInput').focus();
+                });
                     
-                    //系统信息模块
-                    this.socket.on('system', function(nickName, userCount, type) {
+                // System Messages
+                this.socket.on('system', function(nickName, userCount, type) {
                      var msg = nickName + (type == 'login' ? ' joined' : ' left');
-                     that._displayNewMsg('system',msg,'blue');
+                     that.displayMsg('system',msg,'blue');
                      document.getElementById('status').textContent = userCount + (userCount > 1 ? ' users' : ' user') + ' online';
-                 }); 
+                }); 
+                
+                // Send button click listener  
+                document.getElementById('sendBtn').addEventListener('click', function() {
+                    var messageInput = document.getElementById('messageInput');
+                    var msg = messageInput.value;
                     
-                    //点击send－信息发出模块
-                    document.getElementById('sendBtn').addEventListener('click', function() {
-                    var messageInput = document.getElementById('messageInput'),
-                        msg = messageInput.value;
-                        
+                    // initial status    
                     messageInput.value = '';
                     messageInput.focus();
+
                     if (msg.trim().length != 0) {
                         that.socket.emit('postMsg', msg); //把消息发送到服务器
-                        that._displayNewMsg('me', msg); //把自己的消息显示到自己的窗口中
+                        that.displayMsg('me', msg); //把自己的消息显示到自己的窗口中
                         return;
                     };
+                    
                 }, false);
                     
                     //显示信息模块
                     this.socket.on('newMsg', function(user, msg) {
-                        that._displayNewMsg(user, msg);
+                        that.displayMsg(user, msg);
                 });     
             },
-                    //message display function
-                     _displayNewMsg: function(user, msg, color) {
+
+            //message display
+             displayMsg: function(user, msg, color) {
                     var container = document.getElementById('historyMsg'),
                         msgToDisplay = document.createElement('p'),
                         date = new Date().toTimeString().substr(0, 8);
+
                     msgToDisplay.style.color = color || '#000';
-                    msgToDisplay.innerHTML = user + '<span class="timespan">(' + date + '): </span>' + msg;
+                    msgToDisplay.innerHTML = user + '<span class="timespan">(' + date + '): </span>' + '\n' + msg;
+
                     container.appendChild(msgToDisplay);
                     container.scrollTop = container.scrollHeight;
             }   
