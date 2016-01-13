@@ -111,6 +111,18 @@
                 // server connecting via socket
                 this.socket = io.connect();
 
+                // display history messages
+                this.socket.on('output', function(data) {
+
+                    console.log(data);
+
+                    // if(data.length) {
+                    //     for(var x = 0; x < data.length; x = x + 1) {
+                    //         this.displayMsg(data[x].name, data[x].message);
+                    //     }
+                    // }
+                });
+
                 // once server is connected, ask user to enter name
                 this.socket.on('connect', function() {
                     document.getElementById('nicknameInput').focus();
@@ -167,7 +179,7 @@
                     
                 }, false);
                     
-                    //显示信息模块
+                    // regular user messages
                     this.socket.on('newMsg', function(user, msg) {
                         that.displayMsg(user, msg);
                 });     
