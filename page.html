@@ -172,6 +172,13 @@
                     var messageInput = document.getElementById('messageInput');
                     var msg = messageInput.value;
                     
+                    // time String
+                    var date = new Date();
+                    var hour = date.getHours();
+                    var minute = date.getMinutes();
+                    var second = date.getSeconds();
+                    var timeStamp = '('+hour+':'+minute+':'+ second+'): ';
+
                     // initial status    
                     messageInput.value = '';
                     messageInput.focus();
@@ -179,7 +186,7 @@
                     if (msg.trim().length != 0) {
                         // send message to server via socket
                         // server could store the message in Mongodb
-                        that.socket.emit('postMsg', msg); 
+                        that.socket.emit('postMsg', msg, timeStamp); 
                         that.displayMsg('me', msg); //把自己的消息显示到自己的窗口中
                         return;
                     };

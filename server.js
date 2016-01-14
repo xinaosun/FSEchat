@@ -21,12 +21,6 @@
             
             var col = db.collection('messages');
 
-            // emit all history messages
-            // col.find().limit(100).sort({_id:  1}).toArray(function(err, res){
-            //     if(err) throw err;
-            //     socket.emit('output', res);  
-            // });
-
             // connect to server
             console.log("Someone is connecting...");
 
@@ -43,6 +37,7 @@
                     console.log(socket.nickname + " is connected.");
 
                     // mongodb
+                    // display all history messages
                      col.find().limit(100).sort({_id:  1}).toArray(function(err, res){
                 if(err) throw err;
                 socket.emit('output', res);  
@@ -63,11 +58,14 @@
                 var message = msg;
                 var name = socket.nickname;
                 var timeStamp = time;
+
+                console.log(timeStamp);
+
                 // server broadcasting
                 socket.broadcast.emit('newMsg', socket.nickname, msg);
                 
                 // db insertion
-                col.insert({name: name, message: message, time:time}, function(){
+                col.insert({name: name, message: message, time:timeStamp}, function(){
                     console.log('Inserted a line of data');
 
                 });
