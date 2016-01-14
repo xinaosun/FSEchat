@@ -67,7 +67,8 @@
         height: 96px;  
         float: right;  
     }  
-        </style>    
+        </style>
+
     </head> 
     <body> 
         <div class="wrapper"> 
@@ -92,16 +93,15 @@
         
         <script src = "/socket.io/socket.io.js"></script>
         <script type="text/javascript">
-        // JavaScript codes
-        // when window is loaded, call this method
+        // when window is loaded, call this function
         window.onload = function() {
             var FSEchat = new chat();
             FSEchat.initiate();
-            };
+        };
 
         var chat = function() {this.socket = null;};
             
-        // define prototype of chat
+        // define prototype of chat()
         chat.prototype = {
             
             initiate: function() {
@@ -111,16 +111,21 @@
                 // server connecting via socket
                 this.socket = io.connect();
 
-                // display history messages
+                //display history messages
                 this.socket.on('output', function(data) {
 
-                    console.log(data);
+                    if(data.length) {
+                        for(var x = 0; x < data.length; x++ ) {
+                            // var message = document.createElement('div');
+                            // message.setAttribute('class', 'chat-history');
+                            // message.innerHTML = data[x].name +':'+ ' ' + data[x].message;
 
-                    // if(data.length) {
-                    //     for(var x = 0; x < data.length; x = x + 1) {
-                    //         this.displayMsg(data[x].name, data[x].message);
-                    //     }
-                    // }
+                            // Append
+                            that.displayMsg(data[x].name, data[x].message);
+
+                        }
+                    }
+
                 });
 
                 // once server is connected, ask user to enter name
@@ -154,7 +159,7 @@
                     document.getElementById('loginWrapper').style.display = 'none';
                     document.getElementById('messageInput').focus();
                 });
-                    
+                
                 // System Messages
                 this.socket.on('system', function(nickName, userCount, type) {
                      var msg = nickName + (type == 'login' ? ' joined' : ' left');
@@ -172,7 +177,9 @@
                     messageInput.focus();
 
                     if (msg.trim().length != 0) {
-                        that.socket.emit('postMsg', msg); //把消息发送到服务器
+                        // send message to server via socket
+                        // server could store the message in Mongodb
+                        that.socket.emit('postMsg', msg); 
                         that.displayMsg('me', msg); //把自己的消息显示到自己的窗口中
                         return;
                     };
@@ -185,11 +192,11 @@
                 });     
             },
 
-            //message display
+            //message display function
              displayMsg: function(user, msg, color) {
-                    var container = document.getElementById('historyMsg'),
-                        msgToDisplay = document.createElement('p'),
-                        date = new Date().toTimeString().substr(0, 8);
+                    var container = document.getElementById('historyMsg');
+                    var msgToDisplay = document.createElement('p');
+                    var date = new Date().toTimeString().substr(0, 8);
 
                     msgToDisplay.style.color = color || '#000';
                     msgToDisplay.innerHTML = user + '<span class="timespan">(' + date + '): </span>' + '\n' + msg;

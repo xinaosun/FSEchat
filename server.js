@@ -22,16 +22,10 @@
             var col = db.collection('messages');
 
             // emit all history messages
-            // order is reversed
-
-            col.find().limit(100).sort({_id:  1}).toArray(function(err, res){
-                if(err) throw err;
-
-                socket.emit('output', res);
-
-
-
-            });
+            // col.find().limit(100).sort({_id:  1}).toArray(function(err, res){
+            //     if(err) throw err;
+            //     socket.emit('output', res);  
+            // });
 
             // connect to server
             console.log("Someone is connecting...");
@@ -48,8 +42,12 @@
                     io.sockets.emit('system', nickname, users.length, 'login');
                     console.log(socket.nickname + " is connected.");
 
-                    //mongodb
-                    
+                    // mongodb
+                     col.find().limit(100).sort({_id:  1}).toArray(function(err, res){
+                if(err) throw err;
+                socket.emit('output', res);  
+            });
+
                 };
             });  
             
@@ -61,22 +59,18 @@
             });
         
             // post message event
-            socket.on('postMsg', function(msg) {
+            socket.on('postMsg', function(msg, time) {
                 var message = msg;
                 var name = socket.nickname;
-
-                // test for input
-                // console.log(msg);
-
+                var timeStamp = time;
                 // server broadcasting
                 socket.broadcast.emit('newMsg', socket.nickname, msg);
                 
                 // db insertion
-                col.insert({name: name, message: message}, function(){
+                col.insert({name: name, message: message, time:time}, function(){
                     console.log('Inserted a line of data');
 
                 });
-
             });
         });
     });
