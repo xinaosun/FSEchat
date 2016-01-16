@@ -1,4 +1,4 @@
-     // FSE chat room
+    // FSE chat room
     // Author: Xinao Sun
 
     var express = require('express');
@@ -59,15 +59,12 @@
                 var name = socket.nickname;
                 var timeStamp = time;
 
-                console.log(timeStamp);
-
                 // server broadcasting
                 socket.broadcast.emit('newMsg', socket.nickname, msg);
                 
                 // db insertion
                 col.insert({name: name, message: message, time:timeStamp}, function(){
-                    console.log('Inserted a line of data');
-
+                    console.log('Database Updated.');
                 });
             });
         });

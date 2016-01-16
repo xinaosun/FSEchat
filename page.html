@@ -5,75 +5,86 @@
         
         <style type="text/css">
         html, body {  
-        margin: 0;  
-        background-color: #efefef;  
-        font-family: sans-serif;  
-    }  
+            margin: 0;  
+            background-color: #efefef;  
+            font-family: sans-serif;  
+        }
+
         .wrapper {  
-        width: 500px;  
-        height: 640px;  
-        padding: 5px;  
-        margin: 0 auto;  
-        background-color: #ddd;  
-    }  
-    #loginWrapper {  
-        position: fixed;  
-        top: 0;  
-        right: 0;  
-        bottom: 0;  
-        left: 0;  
-        background-color: rgba(5, 5, 5, .6);  
-        text-align: center;  
-        color: #fff;  
-        display: block;  
-        padding-top: 200px;  
-    }  
-    #nickWrapper {  
-        display: block;  
-    }  
-    .banner {  
-        height: 80px;  
-        width: 100%;  
-    }  
-    .banner p {  
-        float: left;  
-        display: inline-block;  
-    }  
-    .controls {  
-        height: 100px;  
-        margin: 5px 0px;  
-        position: relative;  
-    }  
-    #historyMsg {  
-        height: 400px;  
-        background-color: #fff;  
-        overflow: auto;  
-        padding: 2px;  
-    }  
-    #historyMsg img {  
-        max-width: 99%;  
-    }  
-    .timespan {  
-        color: #ddd;  
-    }    
-    #messageInput {  
-        width: 440px;  
-        max-width: 440px;  
-        height: 90px;  
-        max-height: 90px;  
-    }  
-    #sendBtn {  
-        width: 50px;  
-        height: 96px;  
-        float: right;  
-    }  
+            width: 500px;  
+            height: 640px;  
+            padding: 5px;  
+            margin: 0 auto;  
+            background-color: #4285F4;  
+        } 
+
+        #loginWrapper {  
+            position: fixed;  
+            top: 0;  
+            right: 0;  
+            bottom: 0;  
+            left: 0;  
+            background-color: rgba(5, 5, 5, .6);  
+            text-align: center;  
+            color: #fff;  
+            display: block;  
+            padding-top: 200px;  
+        }  
+
+        #nickWrapper {  
+            display: block;  
+        } 
+
+        .banner {  
+            height: 80px;  
+            width: 100%;  
+        }  
+
+        .banner p {  
+            float: left;  
+            display: inline-block;  
+        }  
+
+        .controls {  
+            height: 100px;  
+            margin: 5px 0px;  
+            position: relative;  
+        }  
+
+        #historyMsg {  
+            height: 400px;  
+            background-color: #fff;  
+            overflow: auto;  
+            padding: 2px;  
+        }  
+
+        #historyMsg img {  
+            max-width: 99%;  
+        }  
+
+        .timespan {  
+            color: #ddd;  
+        }    
+
+        #messageInput {  
+            width: 440px;  
+            max-width: 440px;  
+            height: 90px;  
+            max-height: 90px;  
+        } 
+
+        #sendBtn {  
+            width: 50px;  
+            height: 96px;  
+            float: right;  
+        }  
         </style>
 
     </head> 
     <body> 
         <div class="wrapper"> 
             <div class="banner"> 
-                <h1 align="center">FSE Chatroom</h1> 
+                <h1 style="color:#efefef" align="center">FSE Chatroom</h1> 
                 <span id="status"></span> 
             </div> 
             <div id="historyMsg"> 
@@ -106,28 +117,24 @@
             
             initiate: function() {
                 var that = this;
-                    
-                //socket io 连接
+
                 // server connecting via socket
                 this.socket = io.connect();
 
-                //display history messages
+                // display history messages event
+                // display history messages if successfully login
                 this.socket.on('output', function(data) {
-
+                    // load Database
                     if(data.length) {
                         for(var x = 0; x < data.length; x++ ) {
-                            // var message = document.createElement('div');
-                            // message.setAttribute('class', 'chat-history');
-                            // message.innerHTML = data[x].name +':'+ ' ' + data[x].message;
+                            var container = document.getElementById('historyMsg');
+                            var msgToDisplay = document.createElement('p');
 
-                            // Append
-                            that.displayMsg(data[x].name, data[x].message);
-
-                            // var container = document.getElementById('historyMsg');
-                            // var msgToDisplay = document
+                            msgToDisplay.innerHTML = data[x].name + data[x].time +' ' + data[x].message;
+                            container.appendChild(msgToDisplay);
+                            container.scrollTop = container.scrollHeight;
                         }
                     }
-
                 });
 
                 // once server is connected, ask user to enter name
@@ -146,7 +153,7 @@
 
                     } else {
                         document.getElementById('nicknameInput').focus();
-                        };
+                    };
                 }, false);
                     
                 // nickname already exist event
@@ -157,7 +164,7 @@
                 // Login Success event
                 this.socket.on('loginSuccess', function() {
                     // change the tab name when a user login
-                    document.title = 'FSE Chat | ' + document.getElementById('nicknameInput').value;//
+                    document.title = 'FSE Chat | ' + document.getElementById('nicknameInput').value;
                     document.getElementById('loginWrapper').style.display = 'none';
                     document.getElementById('messageInput').focus();
                 });
@@ -166,6 +173,7 @@
                 this.socket.on('system', function(nickName, userCount, type) {
                      var msg = nickName + (type == 'login' ? ' joined' : ' left');
                      that.displayMsg('system',msg,'blue');
+                     // Online users counter
                      document.getElementById('status').textContent = userCount + (userCount > 1 ? ' users' : ' user') + ' online';
                 }); 
                 
@@ -174,14 +182,13 @@
                     var messageInput = document.getElementById('messageInput');
                     var msg = messageInput.value;
                     
-                    // time String
+                    // String of timestamp
                     var date = new Date();
                     var hour = date.getHours();
                     var minute = date.getMinutes();
                     var second = date.getSeconds();
                     var timeStamp = '('+hour+':'+minute+':'+ second+'): ';
-
-                    // initial status    
+ 
                     messageInput.value = '';
                     messageInput.focus();
 
@@ -189,15 +196,16 @@
                         // send message to server via socket
                         // server could store the message in Mongodb
                         that.socket.emit('postMsg', msg, timeStamp); 
-                        that.displayMsg('me', msg); //把自己的消息显示到自己的窗口中
+                        // display messsage on the web browser
+                        that.displayMsg('me', msg);
                         return;
                     };
                     
                 }, false);
                     
-                    // regular user messages
-                    this.socket.on('newMsg', function(user, msg) {
-                        that.displayMsg(user, msg);
+                // display online user messages
+                this.socket.on('newMsg', function(user, msg) {
+                        this.displayMsg(user, msg);
                 });     
             },
 
@@ -212,10 +220,8 @@
 
                     container.appendChild(msgToDisplay);
                     container.scrollTop = container.scrollHeight;
-            }   
-                
-        };
-            
+               }    
+        };            
         </script> 
     </body> 
 </html> 
