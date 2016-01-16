@@ -205,7 +205,7 @@
                     
                 // display online user messages
                 this.socket.on('newMsg', function(user, msg) {
-                        this.displayMsg(user, msg);
+                        that.displayMsg(user, msg);
                 });     
             },
 
